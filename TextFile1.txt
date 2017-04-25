@@ -1,0 +1,1 @@
+{ \"faceId\":\"43c9eb94-5c97-4650-a828-e579b6a948bd\",\"faceRectangle\":{\"top\":31,\"left\":39,\"width\":355,\"height\":355},\"faceAttributes\":{\"smile\":1,\"headPose\":{\"pitch\":0,\"roll\":-2.7,\"yaw\":-2.3},\"gender\":\"male\",\"age\":46.7,\"facialHair\":{\"moustache\":0,\"beard\":0,\"sideburns\":0.1},\"glasses\":\"NoGlasses\"}}
