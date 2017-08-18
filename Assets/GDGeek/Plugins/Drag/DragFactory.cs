@@ -31,7 +31,7 @@ public class DragFactory : MonoBehaviour {
 		item3.transform.SetParent (this.transform);
 		item3.gameObject.SetActive (true);
 		_dManager._list.Add (item3);
-		_dManager.reset ();
+		_dManager.reset (-1);
 	}
 
 

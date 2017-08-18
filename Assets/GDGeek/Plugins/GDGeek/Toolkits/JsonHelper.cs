@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 namespace GDGeek { 
+    /*
     public class JsonHelper
     {
         public static T[] getJsonArray<T>(string json)
@@ -18,5 +19,5 @@ namespace GDGeek {
         {
             public T[] array;
         }
-    }
+    }*/
 }

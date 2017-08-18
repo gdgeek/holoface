@@ -71,15 +71,18 @@ public class FaceManager : Academy.HoloToolkit.Unity.Singleton<FaceManager>
         
     }
 
-    internal Task scanning(Texture2D texture, Action<Face[]> p)
+    internal Task scanning(Texture2D texture, Action<Face[]> doFace)
     {
         Face[] pface = null;
+        Texture2D pShot = null;
         bool isOver = false;
         Task task = new Task();
         task.init = delegate
         {
             StartCoroutine(PostToFaceAPI(texture, delegate (Face[] faces) {
                 pface = faces;
+               
+               // IDCardManager.Instance.addFaces(faces, texture);
                 isOver = true;
             }));
         };
@@ -89,7 +92,7 @@ public class FaceManager : Academy.HoloToolkit.Unity.Singleton<FaceManager>
 
         task.shutdown = delegate
         {
-            p(pface);
+            doFace(pface);
         };
         return task;
     }
@@ -110,7 +113,7 @@ public class FaceManager : Academy.HoloToolkit.Unity.Singleton<FaceManager>
         }
 
     }
-    IEnumerator<object> PostToFaceAPI(Texture2D texture, Action<Face[]> p)
+    IEnumerator<object> PostToFaceAPI(Texture2D texture, Action<Face[]> doFaces)
     {
         byte[] imageData = texture.EncodeToPNG();
         var url = "https://api.projectoxford.ai/face/v1.0/detect?returnFaceAttributes=age,gender,headPose,smile,facialHair,glasses";
@@ -124,15 +127,40 @@ public class FaceManager : Academy.HoloToolkit.Unity.Singleton<FaceManager>
         string responseString = www.text;
         Debug.Log(2);
         JSONObject j = new JSONObject(responseString);
-        Debug.Log(j);
-        Debug.Log(responseString);
 
-        Face[] faces = JsonHelper.getJsonArray<Face>(responseString);
-        p(faces);
-        //doFaceList(faces, texture);
 
-      
-       
+        //DebugManager.Instance.log(responseString);
+        List<Face> facelist = new List<Face>();
+
+        foreach (var result in j.list)
+        {
+            Face face = new Face();
+            var a = result.GetField("faceAttributes");
+            var f = a.GetField("facialHair");
+            var p = result.GetField("faceRectangle");
+            face.faceRectangle = new Face.Rectangle();
+            face.faceRectangle.top = Mathf.CeilToInt(p.GetField("top").f);
+            face.faceRectangle.left = Mathf.CeilToInt(p.GetField("left").f);
+            face.faceRectangle.width = Mathf.CeilToInt(p.GetField("width").f);
+            face.faceRectangle.height = Mathf.CeilToInt(p.GetField("height").f);
+            face.faceAttributes = new Face.Attributes();
+            face.faceAttributes.age = a.GetField("age").f;
+            face.faceAttributes.gender = a.GetField("gender").ToString();
+            face.faceAttributes.smile = a.GetField("smile").f;
+
+            facelist.Add(face);
+            //Debug.Log(string.Format("Gender: {0}\nAge: {1}\nMoustache: {2}\nBeard: {3}\nSideburns: {4}\nGlasses: {5}\nSmile: {6}", a.GetField("gender").str, a.GetField("age"), f.GetField("moustache"), f.GetField("beard"), f.GetField("sideburns"), a.GetField("glasses").str, a.GetField("smile")));
+        }
+
+        //DebugManager.Instance.log(":" + facelist.Count);
+
+        // Face[] faces = JsonHelper.getJsonArray<Face>(responseString);
+        // DebugManager.Instance.log(":"+faces.Length.ToString());
+        doFaces(facelist.ToArray());
+       // doFaceList(faces, texture);
+
+
+
     }
 
 

@@ -4,6 +4,7 @@ using UnityEngine;
 
 public class EasyInput : MonoBehaviour {
 	DragManager dManager_ = null;
+    private float begin_ = 0.0f;
 	void Start(){
 
 		dManager_ = this.gameObject.GetComponent<DragManager> ();
@@ -38,7 +39,9 @@ public class EasyInput : MonoBehaviour {
         if (gesture.pickObject != null) {
 			DragItem item = gesture.pickObject.GetComponentInParent<DragItem> ();
 			if (item != null) {
-				dManager_.touchStart (item, gesture.GetTouchToWordlPoint (5).x);
+
+                begin_ = gesture.GetTouchToWordlPoint(5).x;
+				dManager_.touchStart (item, 0.0f);
 			}
 		}
 	}
@@ -46,9 +49,12 @@ public class EasyInput : MonoBehaviour {
 
 	void On_TouchDown( Gesture gesture){
 
-		dManager_.touchDown(gesture.GetTouchToWordlPoint (5).x);
+        float n = gesture.GetTouchToWordlPoint(5).x - begin_;
+        //Debug.Log(n);
+		dManager_.touchDown(n);
+     //   begin_ = gesture.GetTouchToWordlPoint(5).x;
 
-	}
+    }
 	void On_TouchUp( Gesture gesture){
 		dManager_.touchUp ();
 	}

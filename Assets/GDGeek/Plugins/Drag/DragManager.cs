@@ -57,10 +57,10 @@ public class DragManager : MonoBehaviour {
 		this.fsm_.post ("reset");
 
 	}
-	public void reset(){
+	public void reset(int n){
         for (int i = 0; i < this._list.Count; ++i)
         {
-            this._list[i]._index = i;
+            this._list[i]._index = i -n;
             this._list[i]._id = i;
         }
 		this.refreshPose (pose_);	
@@ -136,7 +136,7 @@ public class DragManager : MonoBehaviour {
 		return state;
 	}
 	void Start(){
-        reset();
+        reset(1);
 		fsm_.addState ("input", getInput ());
 		fsm_.addState ("drag", getDrag ());
 		fsm_.addState ("reset", getReset ());

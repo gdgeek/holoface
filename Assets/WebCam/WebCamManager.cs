@@ -116,7 +116,10 @@ public class WebCamManager : MonoBehaviour
 
     Quaternion cameraRotation;
     public void doFaceList(Face[] faces) {
-        for (int i = 0; i < faces.Length; ++i) {
+        if (faces != null) {
+            IDCardManager.Instance.addFaces(faces, shot_);
+        }
+      /*  for (int i = 0; i < faces.Length; ++i) {
             var face = faces[i];
 
             result_ = new Texture2D(face.faceRectangle.width, face.faceRectangle.height, TextureFormat.RGBA32, false);
@@ -124,10 +127,9 @@ public class WebCamManager : MonoBehaviour
             result_.SetPixels(shot_.GetPixels(face.faceRectangle.left, shot_.height - (face.faceRectangle.top + face.faceRectangle.height), face.faceRectangle.width, face.faceRectangle.height));
             
             result_.Apply();
-            IDCardManager.Instance.addFace(face);
             //_idCard.setup(face, result_);
             theResult.material.mainTexture = result_;
-        }
+        }*/
    
     }
     IEnumerator<object> PostToFaceAPI(byte[] imageData)
@@ -147,8 +149,115 @@ public class WebCamManager : MonoBehaviour
         Debug.Log(j);
         Debug.Log(responseString);
 
-        Face[] faces = GDGeek.JsonHelper.getJsonArray <Face>(responseString);
-        doFaceList(faces);
+
+        if (j.list.Count == 0)
+        {
+        //    status.GetComponent<TextMesh>().text = "no faces found";
+            yield break;
+        }
+
+        List<Face> facelist = new List<Face>();
+
+        foreach (var result in j.list)
+        {
+            Face face = new Face();
+            var a = result.GetField("faceAttributes");
+            var f = a.GetField("facialHair");
+            var p = result.GetField("faceRectangle");
+            face.faceRectangle = new Face.Rectangle();
+            face.faceRectangle.top = Mathf.CeilToInt(p.GetField("top").f);
+            face.faceRectangle.left = Mathf.CeilToInt(p.GetField("left").f);
+            face.faceRectangle.width = Mathf.CeilToInt(p.GetField("width").f);
+            face.faceRectangle.height = Mathf.CeilToInt(p.GetField("height").f);
+            face.faceAttributes = new Face.Attributes();
+            face.faceAttributes.age = a.GetField("age").f;
+            face.faceAttributes.gender = a.GetField("gender").ToString();
+            Debug.Log(face.faceAttributes.gender);
+            face.faceAttributes.smile = a.GetField("smile").f;
+
+            facelist.Add(face);
+            //Debug.Log(string.Format("Gender: {0}\nAge: {1}\nMoustache: {2}\nBeard: {3}\nSideburns: {4}\nGlasses: {5}\nSmile: {6}", a.GetField("gender").str, a.GetField("age"), f.GetField("moustache"), f.GetField("beard"), f.GetField("sideburns"), a.GetField("glasses").str, a.GetField("smile")));
+        }
+
+        //DebugManager.Instance.log(":" + facelist.Count);
+
+        // Face[] faces = JsonHelper.getJsonArray<Face>(responseString);
+        // DebugManager.Instance.log(":"+faces.Length.ToString());
+        this.doFaceList(facelist.ToArray());
+
+
+        /*
+
+        var faceRectangles = "";
+        Dictionary<string, TextMesh> textmeshes = new Dictionary<string, TextMesh>();
+        Dictionary<string, WWW> recognitionJobs = new Dictionary<string, WWW>();
+
+        foreach (var result in j.list)
+        {
+           // GameObject txtObject = (GameObject)Instantiate(textPrefab);
+           // TextMesh txtMesh = txtObject.GetComponent<TextMesh>();
+            var a = result.GetField("faceAttributes");
+            var f = a.GetField("facialHair");
+            var p = result.GetField("faceRectangle");
+         //   float top = -(p.GetField("top").f / cameraResolution.height - .5f);
+         //   float left = p.GetField("left").f / cameraResolution.width - .5f;
+         //   float width = p.GetField("width").f / cameraResolution.width;
+        //    float height = p.GetField("height").f / cameraResolution.height;
+        /*
+            string id = string.Format("{0},{1},{2},{3}", p.GetField("left"), p.GetField("top"), p.GetField("width"), p.GetField("height"));
+          //  textmeshes[id] = txtMesh;
+
+            try
+            {
+                var source = new Texture2D(0, 0);
+                source.LoadImage(imageData);
+                var dest = new Texture2D((int)p["width"].i, (int)p["height"].i);
+                dest.SetPixels(source.GetPixels((int)p["left"].i, cameraResolution.height - (int)p["top"].i - (int)p["height"].i, (int)p["width"].i, (int)p["height"].i));
+                byte[] justThisFace = dest.EncodeToPNG();
+                string filepath = Path.Combine(Application.persistentDataPath, "cropped.png");
+                File.WriteAllBytes(filepath, justThisFace);
+                Debug.Log("saved " + filepath);
+                recognitionJobs[id] = new WWW(OpenFaceUrl, justThisFace);
+                Debug.Log(recognitionJobs.Count + " recog jobs running");
+            }
+            catch (Exception e)
+            {
+                Debug.LogError(e);
+            }
+
+            if (faceRectangles == "")
+            {
+                faceRectangles = id;
+            }
+            else
+            {
+                faceRectangles += ";" + id;
+            }
+         
+            //GameObject faceBounds = (GameObject)Instantiate(framePrefab);
+          //  faceBounds.transform.position = cameraToWorldMatrix.MultiplyPoint3x4(pixelToCameraMatrix.MultiplyPoint3x4(new Vector3(left + width / 2, top, 0)));
+           // faceBounds.transform.rotation = cameraRotation;
+          //  Vector3 scale = pixelToCameraMatrix.MultiplyPoint3x4(new Vector3(width, height, 0));
+          //  scale.z = .1f;
+          //  faceBounds.transform.localScale = scale;
+          //  faceBounds.tag = "faceBounds";
+
+         //   Vector3 origin = cameraToWorldMatrix.MultiplyPoint3x4(pixelToCameraMatrix.MultiplyPoint3x4(new Vector3(left + width + .1f, top, 0)));
+            //txtObject.transform.position = origin;
+          //  txtObject.transform.rotation = cameraRotation;
+          //  txtObject.tag = "faceText";
+          //  if (j.list.Count > 1)
+           // {
+            //    txtObject.transform.localScale /= 2;
+           // }
+
+          //  Debug.Log(string.Format("Gender: {0}\nAge: {1}\nMoustache: {2}\nBeard: {3}\nSideburns: {4}\nGlasses: {5}\nSmile: {6}", a.GetField("gender").str, a.GetField("age"), f.GetField("moustache"), f.GetField("beard"), f.GetField("sideburns"), a.GetField("glasses").str, a.GetField("smile")));
+      //  }
+
+
+
+       // Face[] faces = GDGeek.JsonHelper.getJsonArray <Face>(responseString);
+       // doFaceList(faces);
     
         /*
         var existing = GameObject.FindGameObjectsWithTag("faceText");

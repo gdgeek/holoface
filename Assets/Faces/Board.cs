@@ -46,7 +46,12 @@ public class Board : MonoBehaviour
     {
 
     }
-    internal Task draw(){
-        return new Task();
-   }
+   internal Task draw(){
+        Task task = new TweenTask(delegate
+        {
+
+            return TweenRotation.Begin(_offset, 0.3f, Quaternion.EulerAngles(0,0,0));
+        });
+        return task;
+    }
 }

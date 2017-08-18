@@ -63,9 +63,16 @@ public class FaceLogic : Singleton<FaceLogic> {
         fsm_.addState("show", getShow());
         fsm_.addState("over", getOver());
         fsm_.addState("scanning", getScanning());
+        fsm_.addState("draw", getDraw());
         fsm_.addState("noface", getNoface());
         fsm_.addState("error", getError());
         fsm_.init("normal");
+    }
+    private State getDraw() {
+        State state =  TaskState.Create(delegate {
+            return _board.draw();
+        }, this.fsm_, "show");
+        return state;
     }
     private State getNoface()
     {
@@ -83,29 +90,32 @@ public class FaceLogic : Singleton<FaceLogic> {
 
         bool hasFace = false;
         State state = TaskState.Create(delegate {
-            TaskList tl = new TaskList();
+           
             Task task = FaceManager.Instance.scanning(texture_, delegate(Face[] faces) {
 
-                if (faces == null || faces.Length == 0) {
+
+                if (faces == null || faces.Length == 0)
+                {
                     hasFace = false;
                     return;
                 }
                 hasFace = true;
 
-                for (int i = 0; i < faces.Length; ++i)
-                {
-                    var face = faces[i];
 
-                    var result = new Texture2D(face.faceRectangle.width, face.faceRectangle.height, TextureFormat.RGBA32, false);
-                    
-                    result.SetPixels(texture_.GetPixels(face.faceRectangle.left, texture_.height - (face.faceRectangle.top + face.faceRectangle.height), face.faceRectangle.width, face.faceRectangle.height));
-
-                    result.Apply();
-                    _board.add(face, result);
-                }
+                IDCardManager.Instance.addFaces(faces, texture_);
+           
 
             });
-            tl.push(task);
+            TaskManager.PushFront(task, delegate
+            {
+                //DebugManager.Instance.log("begin");
+            });
+
+
+            TaskManager.PushBack(task, delegate
+            {
+               // DebugManager.Instance.log("end");
+            });
             return task;
         }, this.fsm_, delegate {
             if (hasFace)
